@@ -6,6 +6,9 @@ $email = $password = '';
 $error_message = '';
 $success_message = '';
 
+// Check for redirect parameter
+$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : '';
+
 // Process login form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email']);
@@ -19,31 +22,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error_message = 'Please enter a valid email address.';
         } else {
-            // Check if user exists
-            $sql = "SELECT user_id, email, password, first_name FROM users WHERE email = ?";
-            $stmt = mysqli_prepare($conn, $sql);
+            // Verify user credentials
+            $query = "SELECT * FROM users WHERE email = ?";
+            $stmt = mysqli_prepare($conn, $query);
             mysqli_stmt_bind_param($stmt, "s", $email);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
             
-            if ($user = mysqli_fetch_assoc($result)) {
+            if(mysqli_num_rows($result) > 0) {
+                $user = mysqli_fetch_assoc($result);
+                
                 // Verify password
-                if (password_verify($password, $user['password'])) {
-                    // Login successful - set session variables
+                if(password_verify($password, $user['password'])) {
+                    // Set user session
                     $_SESSION['user_id'] = $user['user_id'];
-                    $_SESSION['user_email'] = $user['email'];
-                    $_SESSION['user_name'] = $user['first_name'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['email'] = $user['email'];
                     
-                    // If there's a cart in session, associate it with the user
-                    $sql = "UPDATE cart SET user_id = ? WHERE session_id = ? AND user_id IS NULL";
-                    $stmt = mysqli_prepare($conn, $sql);
-                    mysqli_stmt_bind_param($stmt, "is", $_SESSION['user_id'], $_SESSION['session_id']);
-                    mysqli_stmt_execute($stmt);
+                    // Check for redirect parameter
+                    if(!empty($redirect)) {
+                        header("Location: $redirect.php");
+                        exit();
+                    }
                     
-                    $success_message = 'Login successful. Redirecting...';
-                    header("Refresh: 2; URL=index.php");
+                    // Redirect to home page
+                    header("Location: index.php");
+                    exit();
                 } else {
-                    $error_message = 'Invalid password. Please try again.';
+                    $error_message = 'Incorrect password. Please try again.';
                 }
             } else {
                 $error_message = 'No account found with that email. Please sign up.';
@@ -67,7 +73,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="auth-card">
             <div class="auth-logo">MyCling</div>
             <h1 class="auth-title">Welcome Back</h1>
-            <p class="auth-subtitle">Login to your account to continue shopping</p>
+            <p class="auth-subtitle">
+                <?php if ($redirect === 'checkout'): ?>
+                Login to continue to checkout
+                <?php else: ?>
+                Login to your account to continue shopping
+                <?php endif; ?>
+            </p>
             
             <?php if (!empty($error_message)): ?>
             <div class="error-message" style="color: #FF6B6B; text-align: center; margin-bottom: 15px;">
@@ -81,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <?php endif; ?>
             
-            <form class="auth-form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+            <form class="auth-form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'] . ($redirect ? "?redirect=$redirect" : "")); ?>">
                 <div class="form-group">
                     <label for="email">Email Address</label>
                     <input type="email" id="email" name="email" placeholder="Enter your email" value="<?php echo htmlspecialchars($email); ?>" required>
@@ -116,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="auth-links">
-                    Don't have an account? <a href="sign_up.php">Sign Up</a>
+                    Don't have an account? <a href="sign_up.php<?php echo $redirect ? "?redirect=$redirect" : ""; ?>">Sign Up</a>
                 </div>
             </form>
         </div>

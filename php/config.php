@@ -3,7 +3,7 @@
 define('DB_SERVER', 'localhost');
 define('DB_USERNAME', 'root');
 define('DB_PASSWORD', '');
-define('DB_NAME', 'mycling_db');
+define('DB_NAME', 'mycling');
 
 // Attempt to connect to MySQL database
 $conn = mysqli_connect(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
@@ -20,7 +20,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Generate or retrieve session ID for guest users
 if (!isset($_SESSION['session_id'])) {
-    $_SESSION['session_id'] = bin2hex(random_bytes(16));
+    $_SESSION['session_id'] = session_id();
 }
 
 // Function to get current user ID or null if not logged in

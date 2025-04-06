@@ -6,6 +6,9 @@ require_once '../php/cart_functions.php';
 $cart_summary = getCartSummary();
 $total_items = $cart_summary['total_items'];
 
+// Check if user is logged in
+$is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+
 // Get trending products
 $trending_query = "SELECT * FROM products WHERE is_featured = 1 ORDER BY is_new DESC LIMIT 5";
 $trending_result = mysqli_query($conn, $trending_query);
@@ -23,6 +26,75 @@ while($row = mysqli_fetch_assoc($trending_result)) {
     <link rel="stylesheet" href="../css/styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="icon" type="image/png" href="../images/favicon.png" />
+    <style>
+      /* Account Dropdown Styles */
+      .account-dropdown {
+          position: relative;
+      }
+      
+      .account-dropdown .account-link {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+      }
+      
+      .account-dropdown .fa-chevron-down {
+          font-size: 12px;
+          transition: transform 0.3s;
+      }
+      
+      .account-dropdown:hover .fa-chevron-down {
+          transform: rotate(180deg);
+      }
+      
+      .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          min-width: 180px;
+          background-color: white;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+          border-radius: var(--border-radius);
+          padding: 8px 0;
+          display: none;
+          z-index: 1000;
+      }
+      
+      .account-dropdown:hover .dropdown-menu {
+          display: block;
+          animation: fadeInDown 0.3s ease;
+      }
+      
+      @keyframes fadeInDown {
+          from {
+              opacity: 0;
+              transform: translateY(-10px);
+          }
+          to {
+              opacity: 1;
+              transform: translateY(0);
+          }
+      }
+      
+      .dropdown-menu a {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 10px 15px;
+          color: var(--text-color);
+          transition: all 0.2s;
+      }
+      
+      .dropdown-menu a:hover {
+          background-color: rgba(107, 76, 230, 0.1);
+          color: var(--primary-color);
+      }
+      
+      .dropdown-menu a i {
+          width: 16px;
+          text-align: center;
+      }
+    </style>
   </head>
   <body>
     <!-- Header -->
@@ -35,7 +107,18 @@ while($row = mysqli_fetch_assoc($trending_result)) {
           <li><a href="women.php"><i class="fas fa-female"></i> Women</a></li>
           <li><a href="product.php"><i class="fas fa-tshirt"></i> Products</a></li>
           <li><a href="cart.php"><i class="fas fa-shopping-cart"></i> Cart <?php if($total_items > 0): ?><span class="cart-count"><?php echo $total_items; ?></span><?php endif; ?></a></li>
-          <li><a href="login.php"><i class="fas fa-user"></i> Account</a></li>
+          <li class="account-dropdown">
+            <?php if($is_logged_in): ?>
+            <a href="#" class="account-link"><i class="fas fa-user"></i> Account <i class="fas fa-chevron-down"></i></a>
+            <div class="dropdown-menu">
+              <a href="profile.php"><i class="fas fa-user-circle"></i> My Profile</a>
+              <a href="orders.php"><i class="fas fa-shopping-bag"></i> My Orders</a>
+              <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </div>
+            <?php else: ?>
+            <a href="login.php"><i class="fas fa-user"></i> Login</a>
+            <?php endif; ?>
+          </li>
           <li>
             <div class="search-container">
               <input type="text" class="search-bar" placeholder="Search products..." />

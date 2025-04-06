@@ -18,6 +18,17 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Admins table
+CREATE TABLE IF NOT EXISTS admins (
+    admin_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'editor') DEFAULT 'admin',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Categories table
 CREATE TABLE IF NOT EXISTS categories (
     category_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -119,4 +130,8 @@ INSERT INTO products (name, description, price, sale_price, category_id, image_u
 ('Casual Shoes', 'Comfortable shoes for everyday wear', 999, NULL, 6, '../images/hoodie-black.png', 40, 0, 0, 0, 5.0, 37),
 ('Elegant Top', 'Sophisticated top for special occasions', 899, NULL, 2, '../images/hoodie-black.png', 25, 0, 1, 0, 3.5, 19),
 ('Denim Jeans', 'Classic denim jeans with perfect fit', 1599, NULL, 3, '../images/hoodie-black.png', 60, 0, 0, 0, 4.0, 23),
-('Designer Watch', 'Premium watch with elegant design', 2499, 2999, 5, '../images/hoodie-black.png', 10, 0, 0, 1, 5.0, 41); 
+('Designer Watch', 'Premium watch with elegant design', 2499, 2999, 5, '../images/hoodie-black.png', 10, 0, 0, 1, 5.0, 41);
+
+-- Insert admin user (password is 'admin123' hashed with password_hash)
+INSERT INTO admins (name, email, password, role) VALUES 
+('Admin User', 'admin@gmail.com', '$2y$10$3lEsFK5.oKxUkw8/u2jZ5ee9vvP9zYrL9Yb0zsg9YZL9ksKKYrY7S', 'admin'); 

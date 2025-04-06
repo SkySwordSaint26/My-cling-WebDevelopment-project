@@ -194,4 +194,51 @@ function clearCart() {
     mysqli_stmt_bind_param($stmt, "i", $cart_id);
     return mysqli_stmt_execute($stmt);
 }
+
+/**
+ * Get a specific cart item
+ * 
+ * @param int $product_id The product ID
+ * @return array|null The cart item or null if not found
+ */
+function getCartItem($product_id) {
+    global $conn;
+    
+    $cart_id = getCartId();
+    
+    $sql = "SELECT ci.*, p.name, p.price, p.sale_price, p.image_url, p.is_sale 
+            FROM cart_items ci
+            JOIN products p ON ci.product_id = p.product_id
+            WHERE ci.cart_id = ? AND ci.product_id = ?";
+            
+    $stmt = mysqli_prepare($conn, $sql);
+    mysqli_stmt_bind_param($stmt, "ii", $cart_id, $product_id);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    
+    if ($row = mysqli_fetch_assoc($result)) {
+        $row['actual_price'] = $row['is_sale'] && $row['sale_price'] ? $row['sale_price'] : $row['price'];
+        $row['total'] = $row['actual_price'] * $row['quantity'];
+        return $row;
+    }
+    
+    return null;
+}
+
+/**
+ * Calculate cart totals
+ * 
+ * @return array Cart totals
+ */
+function calculateCartTotals() {
+    $summary = getCartSummary();
+    
+    return [
+        'subtotal' => $summary['total_price'],
+        'total_items' => $summary['total_items'],
+        'shipping' => 0, // You can implement shipping calculation here
+        'tax' => 0, // You can implement tax calculation here
+        'total' => $summary['total_price'] // Add shipping and tax if needed
+    ];
+}
 ?> 

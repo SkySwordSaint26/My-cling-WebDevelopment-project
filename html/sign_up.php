@@ -6,6 +6,9 @@ $name = $email = $password = $confirm_password = '';
 $error_message = '';
 $success_message = '';
 
+// Check for redirect parameter
+$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : '';
+
 // Process registration form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = trim($_POST['name']);
@@ -62,7 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_stmt_execute($stmt);
                 
                 $success_message = 'Account created successfully! Redirecting...';
-                header("Refresh: 2; URL=index.php");
+                
+                // Determine where to redirect based on the redirect parameter
+                if ($redirect === 'checkout') {
+                    header("Refresh: 2; URL=checkout.php");
+                } else {
+                    header("Refresh: 2; URL=index.php");
+                }
             } else {
                 $error_message = 'An error occurred. Please try again later.';
             }
@@ -85,7 +94,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="auth-card">
             <div class="auth-logo">MyCling</div>
             <h1 class="auth-title">Create Account</h1>
-            <p class="auth-subtitle">Join us and discover amazing fashion</p>
+            <p class="auth-subtitle">
+                <?php if ($redirect === 'checkout'): ?>
+                Sign up to complete your purchase
+                <?php else: ?>
+                Join us and discover amazing fashion
+                <?php endif; ?>
+            </p>
             
             <?php if (!empty($error_message)): ?>
             <div class="error-message" style="color: #FF6B6B; text-align: center; margin-bottom: 15px;">
@@ -99,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <?php endif; ?>
             
-            <form class="auth-form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
+            <form class="auth-form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF'] . ($redirect ? "?redirect=$redirect" : "")); ?>">
                 <div class="form-group">
                     <label for="name">Full Name</label>
                     <input type="text" id="name" name="name" placeholder="Enter your full name" value="<?php echo htmlspecialchars($name); ?>" required>
@@ -140,7 +155,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 
                 <div class="auth-links">
-                    Already have an account? <a href="login.php">Login</a>
+                    Already have an account? <a href="login.php<?php echo $redirect ? "?redirect=$redirect" : ""; ?>">Login</a>
                 </div>
             </form>
         </div>
